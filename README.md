@@ -16,8 +16,8 @@
 1. **克隆项目**
 
    ```bash
-   git clone https://github.com/yourusername/repo-name.git
-   cd repo-name
+   git clone https://github.com/GISer1909/gee_server.git
+   cd gee_server
    ```
 
 2. **安装依赖**
