@@ -107,6 +107,35 @@ app.get('/download', (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 });
 
+app.post('/download2', (req, res) => {
+    const { dataset, day, coord_str, band_index_exp } = req.body;
+
+    if (!dataset || !day || !coord_str) {
+        res.status(400).json({
+            message: 'Missing required parameters.'
+        });
+        return;
+    }
+
+    const python = spawn('python', ['download2.py', '--dataset', dataset, '--day', day, '--coord_str', coord_str, '--band_index_exp', band_index_exp]);
+    console.log('python download2.py --dataset', dataset, '--day', day, '--coord_str', coord_str, '--band_index_exp', band_index_exp)
+    let result = '';
+
+    python.stdout.on('data', (data) => {
+        result += data.toString();
+    });
+
+    python.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+    });
+
+    python.on('close', (code) => {
+        console.log(`child process exited with code ${code}`);
+        res.send(result);
+    });
+});
+
+
 
 app.listen(config.port, () => {
     console.log('Server is running on port 1337');

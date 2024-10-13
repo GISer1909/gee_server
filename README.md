@@ -1,147 +1,133 @@
-# GEE数据查询和下载API文档
+# Google Earth Engine Data Download API
 
-本文档提供了GEE数据查询和下载API的详细信息和使用方法。
+本项目是一个基于 Node.js 的 API，旨在通过 Google Earth Engine (GEE) 下载遥感数据。项目包含多个 API 路由，用于根据坐标点和包围盒搜索图像，以及根据图像 ID 下载图像。
 
-## API概述
+## 特性
 
-本API提供了以下功能：
+- 支持通过点坐标和包围盒搜索指定时间范围内的遥感图像。
+- 提供 WebSocket 支持，允许用户通过连接实时下载数据。
+- 下载时支持指定波段，用户可以根据需求选择特定波段下载。
+- 支持将 GEE 的结果以 JSON 格式返回，便于前端处理。
 
-- 根据指定的数据集、日期范围、云覆盖度和地理位置，查询GEE中的影像数据。
-- 根据影像ID和指定的波段，下载GEE中的影像数据。
+## 安装
 
-请注意，本API仅支持LANDSAT和COPERNICUS系列数据。
+确保您已安装 Node.js 和 Python（推荐版本为 Python 3.6 及以上）。
 
-## API接口
+1. **克隆项目**
 
-### 1. 查询接口
+   ```bash
+   git clone https://github.com/yourusername/repo-name.git
+   cd repo-name
+   ```
 
-#### 1.1 根据点坐标查询GEE数据
+2. **安装依赖**
 
-##### 请求URL：
+   ```bash
+   npm install
+   ```
 
-- `/searchByPoint`
+3. **安装 Python 依赖**
 
-##### 请求方式：
+   确保您已安装 `earthengine-api` 和 `geemap`：
 
-GET
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-##### 参数：
+4. **配置项目**
 
-| 参数名          | 必选 | 类型   | 说明                                                        |
-| --------------- | ---- | ------ | ----------------------------------------------------------- |
-| dataset         | 是   | string | 要查询的数据集名称。目前仅支持LANDSAT和COPERNICUS系列数据。 |
-| start_date      | 是   | string | 查询的开始日期，格式为"YYYY-MM-DD"。                        |
-| end_date        | 是   | string | 查询的结束日期，格式为"YYYY-MM-DD"。                        |
-| max_cloud_cover | 否   | int    | 查询的最大云覆盖度，取值范围为0-100。                       |
-| latitude        | 是   | float  | 查询点的纬度。                                              |
-| longitude       | 是   | float  | 查询点的经度。                                              |
+   在项目根目录下创建一个 `config.json` 文件，并添加您的 GEE 项目信息：
 
-#### 1.2 根据边界框坐标查询GEE数据
+   ```json
+   {
+       "project": "your-google-earth-engine-project-id",
+       "port": 1337
+   }
+   ```
 
-##### 请求URL：
+## 使用
 
-- `/searchByBbox`
+1. **启动服务器**
 
-##### 请求方式：
+   ```bash
+   node index.js
+   ```
 
-GET
+   服务器启动后，您会在控制台看到：
 
-##### 参数：
+   ```
+   Server is running on port 1337
+   ```
 
-| 参数名          | 必选 | 类型   | 说明                                                        |
-| --------------- | ---- | ------ | ----------------------------------------------------------- |
-| dataset         | 是   | string | 要查询的数据集名称。目前仅支持LANDSAT和COPERNICUS系列数据。 |
-| start_date      | 是   | string | 查询的开始日期，格式为"YYYY-MM-DD"。                        |
-| end_date        | 是   | string | 查询的结束日期，格式为"YYYY-MM-DD"。                        |
-| max_cloud_cover | 否   | int    | 查询的最大云覆盖度，取值范围为0-100。                       |
-| xmin            | 是   | float  | 查询边界框的最小x坐标。                                     |
-| ymin            | 是   | float  | 查询边界框的最小y坐标。                                     |
-| xmax            | 是   | float  | 查询边界框的最大x坐标。                                     |
-| ymax            | 是   | float  | 查询边界框的最大y坐标。                                     |
+2. **API 路由**
 
-#### 返回示例：
+   - **根路由**
 
-```json
-{
-    "code": 200,
-    "message": "查询成功",
-    "data": [
-        {
-            "type": "Image",
-            "bands": [...],
-            "id": "COPERNICUS/S2/20190603T022559_20190603T024403_T49QFE",
-            "version": 1561434784303000,
-            "properties": {...}
-        },
-        ...
-    ]
-}
-```
+     - `GET /`：返回服务器运行状态。
 
-### 2. 下载接口
+   - **点搜索**
 
-#### 2.1 下载GEE数据（WebSocket接口）
+     - `GET /searchByPoint`：通过点坐标搜索图像。
 
-##### 请求URL：
+       **请求参数**：
 
-- `/download`
+       - `dataset`：数据集名称
+       - `latitude`：纬度
+       - `longitude`：经度
+       - `start_date`：开始日期（格式：YYYY-MM-DD）
+       - `end_date`：结束日期（格式：YYYY-MM-DD）
+       - `max_cloud_cover`：最大云覆盖率（可选）
 
-##### 请求方式：
+   - **包围盒搜索**
 
-WebSocket
+     - `GET /searchByBbox`：通过包围盒搜索图像。
 
-##### 参数：
+       **请求参数**：
 
-| 参数名   | 必选 | 类型   | 说明                           |
-| -------- | ---- | ------ | ------------------------------ |
-| image_id | 是   | string | 要下载的影像ID。               |
-| bands    | 否   | string | 要下载的影像波段，用逗号分隔。 |
+       - `dataset`：数据集名称
+       - `xmin`：最小经度
+       - `ymin`：最小纬度
+       - `xmax`：最大经度
+       - `ymax`：最大纬度
+       - `start_date`：开始日期（格式：YYYY-MM-DD）
+       - `end_date`：结束日期（格式：YYYY-MM-DD）
+       - `max_cloud_cover`：最大云覆盖率（可选）
 
-在请求完成后，将在服务器的指定目录下生成下载的影像文件。
+   - **下载图像**
 
-##### 注意事项：
+     - **WebSocket 下载**：通过 WebSocket 连接下载图像。
 
-如果WebSocket连接被关闭，且返回的关闭代码为4999，那么将取消下载，并删除已下载的文件。
+       - `GET /download?image_id=<image_id>&bands=<band_list>`：实时下载指定图像 ID 的波段。
 
-#### 2.2 下载GEE数据（HTTP接口）
+     - **HTTP 下载**：通过 HTTP 请求下载图像。
 
-##### 请求URL：
+       - `GET /download?image_id=<image_id>&bands=<band_list>`：下载指定图像 ID 的波段。
 
-- `/download`
+   - **高级下载**
 
-##### 请求方式：
+     - `POST /download2`：通过指定数据集、日期和坐标字符串下载图像。
 
-GET
+       **请求体**：
 
-##### 参数：
-
-| 参数名   | 必选 | 类型   | 说明                           |
-| -------- | ---- | ------ | ------------------------------ |
-| image_id | 是   | string | 要下载的影像ID。               |
-| bands    | 否   | string | 要下载的影像波段，用逗号分隔。 |
-
-在请求完成后，将在服务器的指定目录下生成下载的影像文件。
-
-### 3. 从服务器下载文件接口
-
-#### 请求URL：
-
-- `/{image_id}.tif?t={timestamp}`
-
-其中，`{image_id}`需要将影像ID中的`/`替换为`_`，`{timestamp}`是当前时间戳。
-
-#### 请求方式：
-
-GET
-
-#### 返回：
-
-下载指定影像ID的文件。
+       ```json
+       {
+           "dataset": "your-dataset-name",
+           "day": 5,
+           "coord_str": "[[[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin], [xmin, ymin]]]",
+           "band_index_exp": "your-band-index-expression"  // 可选
+       }
+       ```
 
 ## 注意事项
 
-- 查询接口中的日期参数需遵循"YYYY-MM-DD"的格式。
-- 查询接口中的云覆盖度参数需在0-100之间。
-- 查询接口中的经纬度参数需在合理的范围内，即纬度在-90到90之间，经度在-180到180之间。
-- 下载接口中的影像ID需为存在的影像ID。
-- 下载接口中的波段需为存在的波段，多个波段用逗号分隔。
+- 确保在使用 GEE API 时遵循相关的使用政策。
+- 由于图像数据下载可能会受到网络和 GEE 处理速度的影响，建议在使用前做好相应的错误处理。
+- 可以运行test.py检查是否正确登录GEE。
+
+## 贡献
+
+欢迎提出问题或提交 Pull Request。请在提交之前确保遵循项目的贡献指南。
+
+## 许可证
+
+本项目使用 MIT 许可证，详细信息请查看 [LICENSE](LICENSE) 文件。
