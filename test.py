@@ -16,7 +16,7 @@ project = read_json_file('config.json')['project']
 ee.Initialize(project=project)
 
 #搜索指定的数据集
-info = ee.ImageCollection('COPERNICUS/S2').filterDate('2020-01-01', '2020-12-31').filterBounds(ee.Geometry.Point(116.38, 39.92)).size().getInfo()
+info = ee.ImageCollection('COPERNICUS/S2_HARMONIZED').filterDate('2020-01-01', '2020-12-31').filterBounds(ee.Geometry.Point(116.38, 39.92)).size().getInfo()
 print(info)
 
 
