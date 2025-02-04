@@ -68,7 +68,8 @@ def get_image_metadata(image, image_id, geom, image_time, dataset, cloud_coverag
         "data_time": data_time,
         "cloud_coverage": cloud_coverage,
         "epsg_code": 4326,
-        "resolution": resolution
+        "resolution": resolution,
+        "product_name": image_id + '_' + str(int(datetime.datetime.now().timestamp())),
     }
 
 def main(dataset, day, coord_str, band_index_exp):
@@ -98,7 +99,7 @@ def main(dataset, day, coord_str, band_index_exp):
         image = image.clip(ee.Geometry(geom))
     
         metadata = get_image_metadata(image, image_id, geom, image_time, dataset, cloud_coverage)
-        geemap.download_ee_image(image, './public/' + image_id + '.tif', crs="EPSG:4326")
+        geemap.download_ee_image(image, './public/' + metadata['product_name'] + '.tif', crs="EPSG:4326")
         print(metadata)
         
     except EEException as e:
